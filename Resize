@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أداة تعديل مقاسات الصور</title>
+    <style>
+        /* تصميم احترافي للواجهة */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .preview {
+            margin: 15px 0;
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>أداة تعديل مقاسات الصور</h1>
+        <input type="file" id="upload" accept="image/*" onchange="previewImage()" />
+        <img id="preview" class="preview" alt="معاينة الصورة" />
+        <label>العرض: <input type="number" id="width" placeholder="العرض" /></label>
+        <label>الطول: <input type="number" id="height" placeholder="الطول" /></label>
+        <label>الصيغة:
+            <select id="format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label>
+        <button onclick="resizeAndSave()">تغيير الحجم وحفظ الصورة</button>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <!-- تضمين مكتبات خارجية -->
+    <script src="https://cdn.jsdelivr.net/npm/pica@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-to-blob"></script>
+
+    <script>
+        // عرض معاينة للصورة المحملة
+        function previewImage() {
+            const fileInput = document.getElementById('upload');
+            const preview = document.getElementById('preview');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // تغيير حجم الصورة وحفظها
+        function resizeAndSave() {
+            const fileInput = document.getElementById('upload');
+            const widthInput = document.getElementById('width').value;
+            const heightInput = document.getElementById('height').value;
+            const format = document.getElementById('format').value;
+            const canvas = document.getElementById('canvas');
+
+            if (fileInput.files.length === 0 || !widthInput || !heightInput) {
+                alert("يرجى تحميل صورة وتحديد الطول والعرض.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+
+            img.onload = function () {
+                const pica = window.pica();
+                canvas.width = parseInt(widthInput);
+                canvas.height = parseInt(heightInput);
+
+                pica.resize(img, canvas)
+                    .then(() => {
+                        canvas.toBlob((blob) => {
+                            saveAs(blob, `resized-image.${format}`);
+                        }, `image/${format}`);
+                    })
+                    .catch(error => {
+                        console.error("Error resizing image:", error);
+                    });
+            };
+        }
+    </script>
+</body>
+</html>
