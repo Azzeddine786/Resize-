@@ -206,6 +206,9 @@
         <p>&copy; 2024 - <a href="#">اسم موقعك</a></p>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/5.0.0/pica.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <script>
         let originalWidth, originalHeight;
 
@@ -247,30 +250,32 @@
 
         function resizeAndSave() {
             const fileInput = document.getElementById('upload');
-            const widthInput = document.getElementById('width').value;
-            const heightInput = document.getElementById('height').value;
+            const widthInput = parseInt(document.getElementById('width').value);
+            const heightInput = parseInt(document.getElementById('height').value);
             const format = document.getElementById('format').value;
             const quality = parseFloat(document.getElementById('quality').value);
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
 
-            if (fileInput.files.length === 0 || !widthInput || !heightInput) {
+            if (fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
                 showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
                 return;
             }
 
             const file = fileInput.files[0];
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
+            const img = new Image img.src = URL.createObjectURL(file);
 
             progressBar.style.display = 'block';
             progressBarFill.style.width = '0%';
 
             img.onload = function () {
                 const pica = window.pica();
-                canvas.width = parseInt(widthInput);
-                canvas.height = parseInt(heightInput);
+                canvas.width = widthInput;
+                canvas.height = heightInput;
+
+                // تحديث شريط التقدم أثناء التحميل
+                progressBarFill.style.width = '50%';
 
                 pica.resize(img, canvas)
                     .then(() => {
@@ -279,6 +284,7 @@
                             progressBarFill.style.width = '100%';
                             setTimeout(() => {
                                 progressBar.style.display = 'none';
+                                progressBarFill.style.width = '0%';
                             }, 500);
                             showToast("تم حفظ الصورة بنجاح!");
                         }, `image/${format}`, quality);
@@ -294,9 +300,9 @@
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.classList.add('show');
+            toast.style.opacity = '1';
             setTimeout(() => {
-                toast.classList.remove('show');
+                toast.style.opacity = '0';
             }, 3000);
         }
 
