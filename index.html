@@ -6,7 +6,6 @@
     <title>أداة تعديل مقاسات الصور</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* تنسيق الصفحة */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -263,8 +262,8 @@
                 return;
             }
 
-            const file = fileInput.files[0];
-            const img = new Image img.src = URL.createObjectURL(file);
+            const file = fileInput.files[0const img = new Image();
+            img.src = URL.createObjectURL(file);
 
             progressBar.style.display = 'block';
             progressBarFill.style.width = '0%';
@@ -280,6 +279,7 @@
                 pica.resize(img, canvas)
                     .then(() => {
                         canvas.toBlob((blob) => {
+                            // استخدام FileSaver.js لحفظ الصورة بالصيغة المحددة
                             saveAs(blob, `resized-image.${format}`);
                             progressBarFill.style.width = '100%';
                             setTimeout(() => {
