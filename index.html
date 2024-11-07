@@ -14,7 +14,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e8ed 100%);
         }
 
         .container {
@@ -23,11 +23,12 @@
             padding: 20px;
             background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         h1 {
             color: #333;
+            margin-bottom: 10px;
         }
 
         .description {
@@ -44,6 +45,7 @@
             border-radius: 10px;
             border: 1px solid #ddd;
             display: none;
+            transition: all 0.3s ease;
         }
 
         label {
@@ -58,6 +60,12 @@
             border: 1px solid #ddd;
             width: 100%;
             box-sizing: border-box;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #4CAF50;
+            outline: none;
         }
 
         button {
@@ -69,16 +77,28 @@
             border-radius: 5px;
             cursor: pointer;
             margin-top: 15px;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
         button:hover {
             background-color: #45a049;
+            transform: scale(1.05);
         }
 
         .spinner {
             display: none;
             margin-top: 10px;
+        }
+
+        footer {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.8em;
+        }
+
+        footer a {
+            color: #4CAF50;
+            text-decoration: none;
         }
     </style>
 </head>
@@ -88,8 +108,16 @@
         <p class="description">قم برفع صورتك، وحدد الطول والعرض المرغوبين، ثم احفظ الصورة بالحجم الجديد.</p>
         <input type="file" id="upload" accept="image/*" onchange="previewImage()" />
         <img id="preview" class="preview" alt="معاينة الصورة" />
-        <label><i class="fas fa-arrows-alt-h"></i> العرض: <input type="number" id="width" placeholder="العرض" /></label>
-        <label><i class="fas fa-arrows-alt-v"></i> الطول: <input type="number" id="height" placeholder="الطول" /></label>
+        <label><i class="fas fa-arrows-alt-h"></i> العرض: <input type="number" id="width" placeholder="العرض" oninput="updatePreview()" /></label>
+        <label><i class="fas fa-arrows-alt-v"></i> الطول: <input type="number" id="height" placeholder="الطول" oninput="updatePreview()" /></label>
+        <label><input type="checkbox" id="aspectRatio" /> الحفاظ على نسبة العرض إلى الطول</label>
+        <label>جودة الصورة:
+            <select id="quality">
+                <option value="0.5">50%</option>
+                <option value="0.7">70%</option>
+                <option value="1">100%</option>
+            </select>
+        </label>
         <label><i class="fas fa-file-image"></i> الصيغة:
             <select id="format">
                 <option value="png">PNG</option>
@@ -103,11 +131,17 @@
         <div class="spinner" id="spinner"><i class="fas fa-spinner fa-spin"></i> جارٍ معالجة الصورة...</div>
     </div>
 
+    <footer>
+        <p>حقوق الطبع والنشر &copy; 2024 <a href="#">اسم موقعك</a></p>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/pica@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-to-blob"></script>
 
     <script>
+        let originalWidth, originalHeight;
+
         function previewImage() {
             const fileInput = document.getElementById('upload');
             const preview = document.getElementById('preview');
@@ -118,8 +152,29 @@
                 reader.onload = function (e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        originalWidth = img.width;
+                        originalHeight = img.height;
+                    };
                 };
                 reader.readAsDataURL(file);
+            }
+        }
+
+        function updatePreview() {
+            const widthInput = document.getElementById('width');
+            const heightInput = document.getElementById('height');
+            const aspectRatioCheckbox = document.getElementById('aspectRatio');
+
+            if (aspectRatioCheckbox.checked && originalWidth && originalHeight) {
+                const ratio = originalWidth / originalHeight;
+                if (document.activeElement === widthInput) {
+                    heightInput.value = Math.round(widthInput.value / ratio);
+                } else if (document.activeElement === heightInput) {
+                    widthInput.value = Math.round(heightInput.value * ratio);
+                }
             }
         }
 
@@ -128,6 +183,7 @@
             const widthInput = document.getElementById('width').value;
             const heightInput = document.getElementById('height').value;
             const format = document.getElementById('format').value;
+            const quality = parseFloat(document.getElementById('quality').value);
             const canvas = document.getElementById('canvas');
             const spinner = document.getElementById('spinner');
 
@@ -152,7 +208,7 @@
                         canvas.toBlob((blob) => {
                             saveAs(blob, `resized-image.${format}`);
                             spinner.style.display = 'none';
-                        }, `image/${format}`);
+                        }, `image/${format}`, quality);
                     })
                     .catch(error => {
                         console.error("Error resizing image:", error);
@@ -167,7 +223,10 @@
             document.getElementById('width').value = '';
             document.getElementById('height').value = '';
             document.getElementById('format').value = 'png';
+            document.getElementById('quality').value = '1';
+            document.getElementById('aspectRatio').checked = false;
         }
     </script>
 </body>
+    
 </html>
