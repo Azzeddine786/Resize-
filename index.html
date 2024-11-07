@@ -4,7 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أداة تعديل مقاسات الصور</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* تصميم احترافي للواجهة */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e1e8ed 100%);
+        }
+
+        header {
+            background-color: #4CAF50;
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #333;
+        }
+
+        nav a {
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #4CAF50;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+        }
+
+        .description {
+            color: #666;
+            margin: 15px 0;
+        }
+
+        #drop-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        #drop-area:hover {
+            border-color: #4CAF50;
+        }
+
+        .preview {
+            margin: 15px 0;
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        input, select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .progress-bar {
+            display: none;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 8px;
+            width: 0;
+            background-color: #4CAF50;
+            transition: width 0.4s ease;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -12,10 +158,10 @@
     </header>
 
     <nav>
-        <a href="index.html">الرئيسية</a>
-        <a href="about.html">من نحن</a>
-        <a href="contact.html">اتصل بنا</a>
-        <a href="privacy.html">سياسة الخصوصية</a>
+        <a href="#home">الرئيسية</a>
+        <a href="#about">من نحن</a>
+        <a href="#contact">اتصل بنا</a>
+        <a href="#privacy">سياسة الخصوصية</a>
     </nav>
 
     <div class="container">
@@ -56,170 +202,100 @@
         <div class="toast" id="toast">تم الحفظ بنجاح!</div>
     </div>
 
-    <div id="modal" class="modal" onclick="closeModal()">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <img id="modal-image" src="" alt="معاينة الصورة بالحجم الجديد" />
-        </div>
-    </div>
-
     <footer>
         <p>&copy; 2024 - <a href="#">اسم موقعك</a></p>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        let originalWidth, originalHeight;
+
+        function previewImage() {
+            const fileInput = document.getElementById('upload');
+            const preview = document.getElementById('preview');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        originalWidth = img.width;
+                        originalHeight = img.height;
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updatePreview() {
+            const widthInput = document.getElementById('width');
+            const heightInput = document.getElementById('height');
+            const aspectRatioCheckbox = document.getElementById('aspectRatio');
+
+            if (aspectRatioCheckbox.checked && originalWidth && originalHeight) {
+                const ratio = originalWidth / originalHeight;
+                if (document.activeElement === widthInput) {
+                    heightInput.value = Math.round(widthInput.value / ratio);
+                } else if (document.activeElement === heightInput) {
+                    widthInput.value = Math.round(heightInput.value * ratio);
+                }
+            }
+        }
+
+        function resizeAndSave() {
+            const fileInput = document.getElementById('upload');
+            const widthInput = document.getElementById('width').value;
+            const heightInput = document.getElementById('height').value;
+            const format = document.getElementById('format').value;
+            const quality = parseFloat(document.getElementById('quality').value);
+            const canvas = document.createElement("canvas");
+            const progressBar = document.getElementById('progress-bar');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+
+            if (fileInput.files.length === 0 || !widthInput || !heightInput) {
+                showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+
+            progressBar.style.display = 'block';
+            progressBarFill.style.width = '0%';
+
+            img.onload = function () {
+                const pica = window.pica();
+                canvas.width = parseInt(widthInput);
+                canvas.height = parseInt(heightInput);
+
+                pica.resize(img, canvas)
+                    .then(() => {
+                        canvas.toBlob((blob) => {
+                            saveAs(blob, `resized-image.${format}`);
+                            progressBar.style.display = 'none';
+                            showToast("تم حفظ الصورة بنجاح!");
+                        }, `image/${format}`, quality);
+                    })
+                    .catch(error => {
+                        console.error("Error resizing image:", error);
+                        progressBar.style.display = 'none';
+                        showToast("حدث خطأ أثناء معالجة الصورة.");
+                    });
+            };
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
-
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: linear-gradient(135deg, #f0f2f5 0%, #e1e8ed 100%);
-}
-
-header {
-    background-color: #4CAF50;
-    padding: 15px;
-    text-align: center;
-    color: white;
-}
-
-nav {
-    display: flex;
-    justify-content: center;
-    background-color: #333;
-}
-
-nav a {
-    padding: 15px 20px;
-    color: white;
-    text-decoration: none;
-}
-
-nav a:hover {
-    background-color: #4CAF50;
-}
-
-.container {
-    text-align: center;
-    max-width: 500px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    margin: 20px auto;
-}
-
-.description {
-    color: #666;
-    margin: 15px 0;
-}
-
-.progress-bar, .toast {
-    margin-top: 10px;
-}
-
-.toast {
-    background-color: #4CAF50;
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    display: none;
-}
-
-footer {
-    text-align: center;
-    padding: 20px;
-    background-color: #333;
-    color: white;
-}
-
-let originalWidth, originalHeight;
-
-function previewImage() {
-    const fileInput = document.getElementById('upload');
-    const preview = document.getElementById('preview');
-    const file = fileInput.files[0];
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            const img = new Image();
-            img.src = e.target.result;
-            img.onload = function () {
-                originalWidth = img.width;
-                originalHeight = img.height;
-            };
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function updatePreview() {
-    const widthInput = document.getElementById('width');
-    const heightInput = document.getElementById('height');
-    const aspectRatioCheckbox = document.getElementById('aspectRatio');
-
-    if (aspectRatioCheckbox.checked && originalWidth && originalHeight) {
-        const ratio = originalWidth / originalHeight;
-        if (document.activeElement === widthInput) {
-            heightInput.value = Math.round(widthInput.value / ratio);
-        } else if (document.activeElement === heightInput) {
-            widthInput.value = Math.round(heightInput.value * ratio);
-        }
-    }
-}
-
-function resizeAndSave() {
-    const fileInput = document.getElementById('upload');
-    const widthInput = document.getElementById('width').value;
-    const heightInput = document.getElementById('height').value;
-    const format = document.getElementById('format').value;
-    const quality = parseFloat(document.getElementById('quality').value);
-    const canvas = document.createElement("canvas");
-    const progressBar = document.getElementById('progress-bar');
-    const progressBarFill = document.getElementById('progress-bar-fill');
-
-    if (fileInput.files.length === 0 || !widthInput || !heightInput) {
-        showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-
-    progressBar.style.display = 'block';
-    progressBarFill.style.width = '0%';
-
-    img.onload = function () {
-        const pica = window.pica();
-        canvas.width = parseInt(widthInput);
-        canvas.height = parseInt(heightInput);
-
-        pica.resize(img, canvas)
-            .then(() => {
-                canvas.toBlob((blob) => {
-                    saveAs(blob, `resized-image.${format}`);
-                    progressBar.style.display = 'none';
-                    showToast("تم حفظ الصورة بنجاح!");
-                }, `image/${format}`, quality);
-            })
-            .catch(error => {
-                console.error("Error resizing image:", error);
-                progressBar.style.display = 'none';
-                showToast("حدث خطأ أثناء معالجة الصورة.");
-            });
-    };
-}
-
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.style.display = 'block';
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 3000);
-}
