@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تعديل مقاسات الصور - احترافية</title>
+    <title>أداة تعديل وحفظ مقاسات الصور - احترافية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -56,6 +56,7 @@
             border-radius: 10px;
             cursor: pointer;
             transition: border-color 0.3s;
+            overflow: hidden;
         }
 
         #drop-area:hover {
@@ -70,6 +71,7 @@
             border: 1px solid #ddd;
             display: none;
             transition: all 0.3s ease;
+            object-fit: contain;
         }
 
         .controls {
@@ -152,7 +154,7 @@
 </head>
 <body>
     <header>
-        <h1>أداة تعديل مقاسات الصور - احترافية</h1>
+        <h1>أداة تعديل وحفظ مقاسات الصور - احترافية</h1>
     </header>
 
     <nav>
@@ -163,8 +165,8 @@
     </nav>
 
     <div class="container">
-        <h2>تعديل مقاس الصورة</h2>
-        <p class="description">قم برفع صورتك ثم حدد الأبعاد، السطوع، التباين، والخيارات الأخرى لتعديل الصورة.</p>
+        <h2>تعديل وحفظ مقاسات متعددة للصورة</h2>
+        <p class="description">قم برفع صورتك ثم حدد الأبعاد والإعدادات الأخرى لحفظها بأحجام متعددة.</p>
 
         <div id="drop-area" onclick="document.getElementById('upload').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <p>اسحب الصورة هنا أو انقر للرفع</p>
@@ -194,7 +196,7 @@
             <input type="range" id="contrast" min="0" max="2" step="0.1" value="1" class="slider" oninput="applyContrast()" />
         </div>
 
-        <button onclick="resizeAndSave()">تغيير الحجم وحفظ الصورة</button>
+        <button onclick="resizeAndSaveAllSizes()">حفظ الصورة بجميع المقاسات المختارة</button>
 
         <div class="progress-bar" id="progress-bar">
             <div class="progress-bar-fill" id="progress-bar-fill"></div>
@@ -253,21 +255,19 @@
         function rotateImage(degrees) {
             rotation = (rotation + degrees) % 360;
             const preview = document.getElementById('preview');
-            preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
+            preview.styletransform = `rotate(${rotation}deg) scale(${zoomLevel})`;
         }
 
         function zoomIn() {
-            zoomLevel += 0.1;
+            zoomLevel = Math.min(zoomLevel + 0.1, 1.5); // الحد الأقصى للتكبير 1.5x
             const preview = document.getElementById('preview');
             preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
         }
 
         function zoomOut() {
-            if (zoomLevel > 0.1) {
-                zoomLevel -= 0.1;
-                const preview = document.getElementById('preview');
-                preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
-            }
+            zoomLevel = Math.max(zoomLevel - 0.1, 0.5); // الحد الأدنى للتصغير 0.5x
+            const preview = document.getElementById('preview');
+            preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
         }
 
         function applyBrightness() {
@@ -282,16 +282,21 @@
             preview.style.filter = `brightness(${document.getElementById('brightness').value}) contrast(${contrast})`;
         }
 
-        function resizeAndSave() {
+        function resizeAndSaveAllSizes() {
+            const sizes = [
+                { width: 100, height: 100 },
+                { width: 300, height: 300 },
+                { width: 500, height: 500 },
+                { width: parseInt(document.getElementById('width').value), height: parseInt(document.getElementById('height').value) }
+            ];
+
             const fileInput = document.getElementById('upload');
-            const widthInput = parseInt(document.getElementById('width').value);
-            const heightInput = parseInt(document.getElementById('height').value);
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
 
-            if (fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
-                showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
+            if (fileInput.files.length === 0) {
+                showToast("يرجى تحميل صورة أولاً.");
                 return;
             }
 
@@ -302,30 +307,28 @@
             progressBar.style.display = 'block';
             progressBarFill.style.width = '0%';
 
-            img.onload = function () {
+            img.onload = async function () {
                 const pica = window.pica();
-                canvas.width = widthInput;
-                canvas.height = heightInput;
+                let processed = 0;
 
-                progressBarFill.style.width = '50%';
+                for (const size of sizes) {
+                    canvas.width = size.width;
+                    canvas.height = size.height;
 
-                pica.resize(img, canvas)
-                    .then(() => {
-                        canvas.toBlob((blob) => {
-                            saveAs(blob, `resized-image.png`);
-                            progressBarFill.style.width = '100%';
-                            setTimeout(() => {
-                                progressBar.style.display = 'none';
-                                progressBarFill.style.width = '0%';
-                            }, 500);
-                            showToast("تم حفظ الصورة بنجاح!");
-                        }, 'image/png', 1);
-                    })
-                    .catch(error => {
-                        console.error("Error resizing image:", error);
-                        progressBar.style.display = 'none';
-                        showToast("حدث خطأ أثناء معالجة الصورة.");
-                    });
+                    await pica.resize(img, canvas);
+                    canvas.toBlob((blob) => {
+                        saveAs(blob, `resized-image-${size.width}x${size.height}.png`);
+                    }, 'image/png', 1);
+
+                    processed++;
+                    progressBarFill.style.width = `${(processed / sizes.length) * 100}%`;
+                }
+
+                showToast("تم حفظ الصورة بجميع المقاسات بنجاح!");
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarFill.style.width = '0%';
+                }, 500);
             };
         }
 
@@ -336,25 +339,6 @@
             setTimeout(() => {
                 toast.classList.remove("show");
             }, 3000);
-        }
-
-        function resetForm() {
-            document.getElementById('upload').value = '';
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('width').value = '';
-            document.getElementById('height').value = '';
-            document.getElementById('aspectRatio').checked = false;
-            document.getElementById('brightness').value = '1';
-            document.getElementById('contrast').value = '1';
-            rotation = 0;
-            zoomLevel = 1;
-            applyBrightness();
-            applyContrast();
-            const preview = document.getElementById('preview');
-            preview.style.transform = `rotate(0deg) scale(1)`;
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.display = 'none';
-            document.getElementById('progress-bar-fill').style.width = '0';
         }
 
         function handleDrop(event) {
