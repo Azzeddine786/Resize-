@@ -6,7 +6,7 @@
     <title>أداة تعديل مقاسات الصور</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* تصميم احترافي للواجهة */
+        /* تنسيق الصفحة */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -168,12 +168,12 @@
         <h2>تعديل مقاس الصورة</h2>
         <p class="description">قم برفع صورتك ثم حدد الأبعاد الجديدة لحجم الصورة.</p>
 
-        <div id="drop-area" onclick="document.getElementById('upload').click()" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
+        <div id="drop-area" onclick="document.getElementById('upload').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <p>اسحب الصورة هنا أو انقر للرفع</p>
             <input type="file" id="upload" accept="image/*" onchange="previewImage()" style="display:none;" />
         </div>
 
-        <img id="preview" class="preview" alt="معاينة الصورة" onclick="openModal()" />
+        <img id="preview" class="preview" alt="معاينة الصورة" />
 
         <label>العرض: <input type="number" id="width" placeholder="العرض" oninput="updatePreview()" /></label>
         <label>الطول: <input type="number" id="height" placeholder="الطول" oninput="updatePreview()" /></label>
@@ -276,7 +276,10 @@
                     .then(() => {
                         canvas.toBlob((blob) => {
                             saveAs(blob, `resized-image.${format}`);
-                            progressBar.style.display = 'none';
+                            progressBarFill.style.width = '100%';
+                            setTimeout(() => {
+                                progressBar.style.display = 'none';
+                            }, 500);
                             showToast("تم حفظ الصورة بنجاح!");
                         }, `image/${format}`, quality);
                     })
@@ -291,10 +294,32 @@
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.style.display = 'block';
+            toast.classList.add('show');
             setTimeout(() => {
-                toast.style.display = 'none';
+                toast.classList.remove('show');
             }, 3000);
+        }
+
+        function resetForm() {
+            document.getElementById('upload').value = '';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('format').value = 'png';
+            document.getElementById('quality').value = '1';
+            document.getElementById('aspectRatio').checked = false;
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.display = 'none';
+            document.getElementById('progress-bar-fill').style.width = '0';
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('upload').files = event.dataTransfer.files;
+                previewImage();
+            }
         }
     </script>
 </body>
