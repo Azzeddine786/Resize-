@@ -192,7 +192,18 @@
             </select>
         </label>
         
+        <label>تأثيرات الصورة:
+            <select id="filter" onchange="applyFilter()">
+                <option value="none">بدون تأثير</option>
+                <option value="grayscale(100%)">أبيض وأسود</option>
+                <option value="sepia(100%)">سيبيا</option>
+                <option value="contrast(200%)">تباين</option>
+                <option value="brightness(150%)">إضاءة</option>
+            </select>
+        </label>
+
         <button onclick="resizeAndSave()">تغيير الحجم وحفظ الصورة</button>
+        <button onclick="shareImage()">مشاركة الصورة</button>
         <button onclick="resetForm()">إعادة الضبط</button>
 
         <div class="progress-bar" id="progress-bar">
@@ -249,8 +260,13 @@
             }
         }
 
-        function resizeAndSave() {
-            const fileInput = document.getElementById('upload');
+        function applyFilter() {
+            const filter = document.getElementById('filter').value;
+            const preview = document.getElementById('preview');
+            preview.style.filter = filter;
+        }
+
+        function resizeAndSave() {const fileInput = document.getElementById('upload');
             const widthInput = parseInt(document.getElementById('width').value);
             const heightInput = parseInt(document.getElementById('height').value);
             const format = document.getElementById('format').value;
@@ -259,7 +275,7 @@
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
 
-            if(fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
+            if (fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
                 showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
                 return;
             }
@@ -276,13 +292,11 @@
                 canvas.width = widthInput;
                 canvas.height = heightInput;
 
-                // تحديث شريط التقدم أثناء التحميل
                 progressBarFill.style.width = '50%';
 
                 pica.resize(img, canvas)
                     .then(() => {
                         canvas.toBlob((blob) => {
-                            // استخدام FileSaver.js لحفظ الصورة بالصيغة المحددة
                             saveAs(blob, `resized-image.${format}`);
                             progressBarFill.style.width = '100%';
                             setTimeout(() => {
@@ -317,9 +331,30 @@
             document.getElementById('format').value = 'png';
             document.getElementById('quality').value = '1';
             document.getElementById('aspectRatio').checked = false;
+            document.getElementById('filter').value = 'none';
+            applyFilter();
             const progressBar = document.getElementById('progress-bar');
             progressBar.style.display = 'none';
             document.getElementById('progress-bar-fill').style.width = '0';
+        }
+
+        function shareImage() {
+            const fileInput = document.getElementById('upload');
+            if (fileInput.files.length === 0) {
+                showToast("يرجى تحميل صورة أولاً.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (navigator.share) {
+                navigator.share({
+                    title: 'صورة معدلة',
+                    files: [file]
+                }).then(() => showToast("تمت المشاركة بنجاح!"))
+                .catch((error) => console.log('Error sharing:', error));
+            } else {
+                showToast("المشاركة غير مدعومة على هذا الجهاز.");
+            }
         }
 
         function handleDrop(event) {
