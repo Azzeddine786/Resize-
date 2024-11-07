@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تعديل مقاسات الصور</title>
+    <title>أداة تعديل مقاسات الصور - احترافية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -37,7 +37,7 @@
 
         .container {
             text-align: center;
-            max-width: 500px;
+            max-width: 600px;
             padding: 20px;
             background-color: #fff;
             border-radius: 10px;
@@ -72,41 +72,40 @@
             transition: all 0.3s ease;
         }
 
-        label {
-            display: block;
+        .controls {
+            display: flex;
+            justify-content: space-around;
             margin: 10px 0;
-            font-weight: bold;
         }
 
-        input, select {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            width: 100%;
-            box-sizing: border-box;
-            transition: border 0.3s;
-        }
-
-        input:focus, select:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
+        .control-button {
             background-color: #4CAF50;
+            color: white;
             border: none;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 15px;
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        button:hover {
+        .control-button:hover {
             background-color: #45a049;
             transform: scale(1.05);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .slider {
+            width: 100%;
         }
 
         .progress-bar {
@@ -153,7 +152,7 @@
 </head>
 <body>
     <header>
-        <h1>أداة تعديل مقاسات الصور</h1>
+        <h1>أداة تعديل مقاسات الصور - احترافية</h1>
     </header>
 
     <nav>
@@ -165,7 +164,7 @@
 
     <div class="container">
         <h2>تعديل مقاس الصورة</h2>
-        <p class="description">قم برفع صورتك ثم حدد الأبعاد الجديدة لحجم الصورة.</p>
+        <p class="description">قم برفع صورتك ثم حدد الأبعاد، السطوع، التباين، والخيارات الأخرى لتعديل الصورة.</p>
 
         <div id="drop-area" onclick="document.getElementById('upload').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <p>اسحب الصورة هنا أو انقر للرفع</p>
@@ -174,37 +173,28 @@
 
         <img id="preview" class="preview" alt="معاينة الصورة" />
 
+        <div class="controls">
+            <button class="control-button" onclick="rotateImage(-90)">تدوير -90°</button>
+            <button class="control-button" onclick="rotateImage(90)">تدوير +90°</button>
+            <button class="control-button" onclick="zoomIn()">تكبير</button>
+            <button class="control-button" onclick="zoomOut()">تصغير</button>
+        </div>
+
         <label>العرض: <input type="number" id="width" placeholder="العرض" oninput="updatePreview()" /></label>
         <label>الطول: <input type="number" id="height" placeholder="الطول" oninput="updatePreview()" /></label>
         <label><input type="checkbox" id="aspectRatio" /> الحفاظ على نسبة العرض إلى الطول</label>
-        <label>جودة الصورة:
-            <select id="quality">
-                <option value="0.5">50%</option>
-                <option value="0.7">70%</option>
-                <option value="1">100%</option>
-            </select>
-        </label>
-        <label>الصيغة:
-            <select id="format">
-                <option value="png">PNG</option>
-                <option value="jpeg">JPEG</option>
-                <option value="webp">WEBP</option>
-            </select>
-        </label>
-        
-        <label>تأثيرات الصورة:
-            <select id="filter" onchange="applyFilter()">
-                <option value="none">بدون تأثير</option>
-                <option value="grayscale(100%)">أبيض وأسود</option>
-                <option value="sepia(100%)">سيبيا</option>
-                <option value="contrast(200%)">تباين</option>
-                <option value="brightness(150%)">إضاءة</option>
-            </select>
-        </label>
+
+        <div class="slider-container">
+            <label>سطوع:</label>
+            <input type="range" id="brightness" min="0" max="2" step="0.1" value="1" class="slider" oninput="applyBrightness()" />
+        </div>
+
+        <div class="slider-container">
+            <label>تباين:</label>
+            <input type="range" id="contrast" min="0" max="2" step="0.1" value="1" class="slider" oninput="applyContrast()" />
+        </div>
 
         <button onclick="resizeAndSave()">تغيير الحجم وحفظ الصورة</button>
-        <button onclick="shareImage()">مشاركة الصورة</button>
-        <button onclick="resetForm()">إعادة الضبط</button>
 
         <div class="progress-bar" id="progress-bar">
             <div class="progress-bar-fill" id="progress-bar-fill"></div>
@@ -220,7 +210,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
-        let originalWidth, originalHeight;
+        let originalWidth, originalHeight, rotation = 0, zoomLevel = 1;
 
         function previewImage() {
             const fileInput = document.getElementById('upload');
@@ -260,17 +250,42 @@
             }
         }
 
-        function applyFilter() {
-            const filter = document.getElementById('filter').value;
+        function rotateImage(degrees) {
+            rotation = (rotation + degrees) % 360;
             const preview = document.getElementById('preview');
-            preview.style.filter = filter;
+            preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
         }
 
-        function resizeAndSave() {const fileInput = document.getElementById('upload');
+        function zoomIn() {
+            zoomLevel += 0.1;
+            const preview = document.getElementById('preview');
+            preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
+        }
+
+        function zoomOut() {
+            if (zoomLevel > 0.1) {
+                zoomLevel -= 0.1;
+                const preview = document.getElementById('preview');
+                preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
+            }
+        }
+
+        function applyBrightness() {
+            const brightness = document.getElementById('brightness').value;
+            const preview = document.getElementById('preview');
+            preview.style.filter = `brightness(${brightness}) contrast(${document.getElementById('contrast').value})`;
+        }
+
+        function applyContrast() {
+            const contrast = document.getElementById('contrast').value;
+            const preview = document.getElementById('preview');
+            preview.style.filter = `brightness(${document.getElementById('brightness').value}) contrast(${contrast})`;
+        }
+
+        function resizeAndSave() {
+            const fileInput = document.getElementById('upload');
             const widthInput = parseInt(document.getElementById('width').value);
             const heightInput = parseInt(document.getElementById('height').value);
-            const format = document.getElementById('format').value;
-            const quality = parseFloat(document.getElementById('quality').value);
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
@@ -297,14 +312,14 @@
                 pica.resize(img, canvas)
                     .then(() => {
                         canvas.toBlob((blob) => {
-                            saveAs(blob, `resized-image.${format}`);
+                            saveAs(blob, `resized-image.png`);
                             progressBarFill.style.width = '100%';
                             setTimeout(() => {
                                 progressBar.style.display = 'none';
                                 progressBarFill.style.width = '0%';
                             }, 500);
                             showToast("تم حفظ الصورة بنجاح!");
-                        }, `image/${format}`, quality);
+                        }, 'image/png', 1);
                     })
                     .catch(error => {
                         console.error("Error resizing image:", error);
@@ -328,33 +343,18 @@
             document.getElementById('preview').style.display = 'none';
             document.getElementById('width').value = '';
             document.getElementById('height').value = '';
-            document.getElementById('format').value = 'png';
-            document.getElementById('quality').value = '1';
             document.getElementById('aspectRatio').checked = false;
-            document.getElementById('filter').value = 'none';
-            applyFilter();
+            document.getElementById('brightness').value = '1';
+            document.getElementById('contrast').value = '1';
+            rotation = 0;
+            zoomLevel = 1;
+            applyBrightness();
+            applyContrast();
+            const preview = document.getElementById('preview');
+            preview.style.transform = `rotate(0deg) scale(1)`;
             const progressBar = document.getElementById('progress-bar');
             progressBar.style.display = 'none';
             document.getElementById('progress-bar-fill').style.width = '0';
-        }
-
-        function shareImage() {
-            const fileInput = document.getElementById('upload');
-            if (fileInput.files.length === 0) {
-                showToast("يرجى تحميل صورة أولاً.");
-                return;
-            }
-
-            const file = fileInput.files[0];
-            if (navigator.share) {
-                navigator.share({
-                    title: 'صورة معدلة',
-                    files: [file]
-                }).then(() => showToast("تمت المشاركة بنجاح!"))
-                .catch((error) => console.log('Error sharing:', error));
-            } else {
-                showToast("المشاركة غير مدعومة على هذا الجهاز.");
-            }
         }
 
         function handleDrop(event) {
