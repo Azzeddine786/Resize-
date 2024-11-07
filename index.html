@@ -259,7 +259,7 @@
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
 
-            if (fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
+            if(fileInput.files.length === 0 || isNaN(widthInput) || isNaN(heightInput)) {
                 showToast("يرجى تحميل صورة وتحديد الطول والعرض.");
                 return;
             }
@@ -303,9 +303,9 @@
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.style.opacity = '1';
+            toast.classList.add("show");
             setTimeout(() => {
-                toast.style.opacity = '0';
+                toast.classList.remove("show");
             }, 3000);
         }
 
