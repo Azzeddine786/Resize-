@@ -226,6 +226,8 @@
                     img.onload = function () {
                         originalWidth = img.width;
                         originalHeight = img.height;
+                        document.getElementById('width').value = originalWidth;
+                        document.getElementById('height').value = originalHeight;
                     };
                 };
                 reader.readAsDataURL(file);
@@ -262,7 +264,8 @@
                 return;
             }
 
-            const file = fileInput.files[0const img = new Image();
+            const file = fileInput.files[0];
+            const img = new Image();
             img.src = URL.createObjectURL(file);
 
             progressBar.style.display = 'block';
