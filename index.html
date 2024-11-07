@@ -196,6 +196,14 @@
             <input type="range" id="contrast" min="0" max="2" step="0.1" value="1" class="slider" oninput="applyContrast()" />
         </div>
 
+        <label>صيغة الملف:
+            <select id="format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label>
+
         <button onclick="resizeAndSaveAllSizes()">حفظ الصورة بجميع المقاسات المختارة</button>
 
         <div class="progress-bar" id="progress-bar">
@@ -255,7 +263,7 @@
         function rotateImage(degrees) {
             rotation = (rotation + degrees) % 360;
             const preview = document.getElementById('preview');
-            preview.styletransform = `rotate(${rotation}deg) scale(${zoomLevel})`;
+            preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
         }
 
         function zoomIn() {
@@ -291,6 +299,7 @@
             ];
 
             const fileInput = document.getElementById('upload');
+            const format = document.getElementById('format').value;
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
@@ -317,8 +326,8 @@
 
                     await pica.resize(img, canvas);
                     canvas.toBlob((blob) => {
-                        saveAs(blob, `resized-image-${size.width}x${size.height}.png`);
-                    }, 'image/png', 1);
+                        saveAs(blob, `resized-image-${size.width}x${size.height}.${format}`);
+                    }, `image/${format}`, 1);
 
                     processed++;
                     progressBarFill.style.width = `${(processed / sizes.length) * 100}%`;
@@ -352,3 +361,4 @@
     </script>
 </body>
 </html>
+                                                  
