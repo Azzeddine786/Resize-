@@ -171,7 +171,7 @@
             <button class="control-button" onclick="zoomIn()" title="تكبير">تكبير</button>
             <button class="control-button" onclick="zoomOut()" title="تصغير">تصغير</button>
             <button class="control-button" onclick="applyGrayScale()" title="تدرج رمادي">تدرج رمادي</button>
-            <button class="control-button" onclick="resetImage()" title="إعادة الصورة">إعادة الصورة</button>
+            <button class="control-button" onclick="resetImageTransformations()" title="إعادة الصورة">إعادة الصورة</button>
             <button class="control-button" id="removeBgButton" onclick="removeBackground()">إزالة الخلفية</button>
         </div>
         <label>الوحدة: 
@@ -194,6 +194,8 @@
     <footer>
         <p>&copy; 2024 - <a href="#">اسم موقعك</a></p>
     </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/5.0.0/pica.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script>
         const dpi = 96; 
         let originalWidth, originalHeight, rotation = 0, zoomLevel = 1, flipH = 1, flipV = 1;
@@ -209,7 +211,7 @@
                 height = (height / dpi) * 2.54;
             } else if (unit === "in") {
                 width = width / dpi;
-                height = height / dpi;
+                height =height = height / dpi;
             }
             widthInput.value = width.toFixed(2);
             heightInput.value = height.toFixed(2);
@@ -234,22 +236,23 @@
         }
 
         function previewImage() {
-    const fileInput = document.getElementById('upload');
-    const preview = document.getElementById('preview');
-    const file = fileInput.files[0];
+            const fileInput = document.getElementById('upload');
+            const preview = document.getElementById('preview');
+            const file = fileInput.files[0];
 
-    // تحقق من وجود الملف وأنه من نوع الصورة
-    if (file && file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result; // عرض الصورة
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        alert("يرجى تحميل صورة صحيحة."); // تنبيه إذا كان الملف غير صورة
-    }
-}
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    resetImageTransformations();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("يرجى تحميل صورة صحيحة.");
+            }
+        }
+
         function resetImageTransformations() {
             rotation = 0;
             zoomLevel = 1;
@@ -348,7 +351,7 @@
             ];
 
             const fileInput = document.getElementById('upload');
-            const format = document.getElementById('format').value || 'png';
+            const format = document.getElementById('format') ? document.getElementById('format').value : 'png';
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
@@ -358,7 +361,7 @@
                 return;
             }
 
-            const file = fileInput.files[0const file = fileInput.files[0];
+            const file = fileInput.files[0];
             const img = new Image();
             img.src = URL.createObjectURL(file);
 
