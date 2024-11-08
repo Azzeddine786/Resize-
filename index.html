@@ -188,7 +188,7 @@
             <button class="control-button" onclick="rotateImage(90)">تدوير +90°</button>
             <button class="control-button" onclick="zoomIn()">تكبير</button>
             <button class="control-button" onclick="zoomOut()">تصغير</button>
-            <button class="control-button" onclick="removeBackground()">إزالة الخلفية</button>
+            <button class="control-button" id="removeBgButton" onclick="removeBackground()">إزالة الخلفية</button>
         </div>
 
         <label>الوحدة: 
@@ -250,7 +250,7 @@
                     preview.src = e.target.result;
                     preview.style.display = 'block';
                     const img = new Image();
-                    img.src = e.target.result;
+                    img.src =e.target.result;
                     img.onload = function () {
                         originalWidth = img.width;
                         originalHeight = img.height;
@@ -300,10 +300,19 @@
 
         async function removeBackground() {
             const fileInput = document.getElementById('upload').files[0];
+            const removeBgButton = document.getElementById('removeBgButton');
+            const progressBar = document.getElementById('progress-bar');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+
             if (!fileInput) {
                 showToast("يرجى تحميل صورة أولاً.");
                 return;
             }
+
+            // تعطيل الزر وإظهار شريط التقدم
+            removeBgButton.disabled = true;
+            progressBar.style.display = 'block';
+            progressBarFill.style.width = '0%';
 
             const formData = new FormData();
             formData.append("image_file", fileInput);
@@ -322,6 +331,7 @@
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
                     document.getElementById("preview").src = url;
+                    progressBarFill.style.width = '100%';
                     showToast("تمت إزالة الخلفية بنجاح!");
                 } else {
                     showToast("فشل في إزالة الخلفية. تأكد من صحة مفتاح API وحاول مجددًا.");
@@ -329,6 +339,13 @@
             } catch (error) {
                 console.error("Error:", error);
                 showToast("حدث خطأ أثناء إزالة الخلفية.");
+            } finally {
+                // إعادة تمكين الزر وإخفاء شريط التقدم
+                removeBgButton.disabled = false;
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarFill.style.width = '0%';
+                }, 500);
             }
         }
 
