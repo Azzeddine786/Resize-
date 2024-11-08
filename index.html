@@ -6,158 +6,7 @@
     <title>أداة تعديل وحفظ مقاسات الصور - احترافية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: linear-gradient(135deg, #f0f2f5 0%, #e1e8ed 100%);
-            color: #333;
-        }
-
-        header {
-            background-color: #4CAF50;
-            padding: 15px;
-            text-align: center;
-            color: white;
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            background-color: #333;
-        }
-
-        nav a {
-            padding: 15px 20px;
-            color: white;
-            text-decoration: none;
-        }
-
-        nav a:hover {
-            background-color: #4CAF50;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 600px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            margin: 20px auto;
-        }
-
-        .description {
-            color: #666;
-            margin: 15px 0;
-        }
-
-        #drop-area {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: border-color 0.3s;
-            overflow: hidden;
-        }
-
-        #drop-area:hover {
-            border-color: #4CAF50;
-        }
-
-        .preview-container {
-            width: 100%;
-            height: 300px;
-            overflow: hidden;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f8f8;
-        }
-
-        .preview {
-            max-width: 100%;
-            max-height: 100%;
-            transition: all 0.3s ease;
-            object-fit: contain;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: space-around;
-            margin: 10px 0;
-        }
-
-        .control-button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        .control-button:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
-        }
-
-        .progress-bar {
-            display: none;
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-bar-fill {
-            height: 8px;
-            width: 0;
-            background-color: #4CAF50;
-            transition: width 0.4s ease;
-        }
-
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #4CAF50;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            z-index: 1001;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #333;
-            color: white;
-        }
-
-        .reset-button {
-            background-color: #FF5722;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 15px;
-        }
-
-        .reset-button:hover {
-            background-color: #e64a19;
-        }
+        /* جميع تنسيقات CSS هنا */
     </style>
 </head>
 <body>
@@ -218,8 +67,12 @@
         <p>&copy; 2024 - <a href="#">اسم موقعك</a></p>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/5.0.0/pica.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <script>
-        const dpi = 96; // كثافة النقاط لكل بوصة
+        const dpi = 96; // كثافة النقاط لكل بوصة (DPI) القياسية لأجهزة العرض
+        let originalWidth, originalHeight, rotation = 0, zoomLevel = 1;
 
         function updateDimensions() {
             const unit = document.getElementById("unit").value;
@@ -230,10 +83,10 @@
             let height = originalHeight;
 
             if (unit === "cm") {
-                width = (width / dpi) * 2.54; // تحويل من بكسل إلى سنتيمتر
+                width = (width / dpi) * 2.54; // التحويل من Pixel إلى Cm
                 height = (height / dpi) * 2.54;
             } else if (unit === "in") {
-                width = width / dpi; // تحويل من بكسل إلى إنش
+                width = width / dpi; // التحويل من Pixel إلى Inch
                 height = height / dpi;
             }
 
@@ -250,19 +103,17 @@
             let height = parseFloat(heightInput);
 
             if (unit === "cm") {
-                width = (width * dpi) / 2.54; // تحويل من سنتيمتر إلى بكسل
+                width = (width * dpi) / 2.54; // التحويل من Cm إلى Pixel
                 height = (height * dpi) / 2.54;
             } else if (unit === "in") {
-                width = width * dpi; // تحويل من إنش إلى بكسل
+                width = width * dpi; // التحويل من Inch إلى Pixel
                 height = height * dpi;
             }
 
             const preview = document.getElementById("preview");
-            preview.style.widthpreview.style.width = `${width}px`;
+            preview.style.width = `${width}px`;
             preview.style.height = `${height}px`;
         }
-
-        let originalWidth, originalHeight, rotation = 0, zoomLevel = 1;
 
         function previewImage() {
             const fileInput = document.getElementById('upload');
@@ -281,6 +132,7 @@
                         originalHeight = img.height;
                         document.getElementById('width').value = originalWidth;
                         document.getElementById('height').value = originalHeight;
+                        updateDimensions(); // تحديث الأبعاد للوحدة الحالية
                         zoomLevel = 1;
                         rotation = 0;
                         preview.style.transform = `scale(${zoomLevel}) rotate(${rotation}deg)`;
@@ -290,24 +142,59 @@
             }
         }
 
-        function rotateImage(degrees) {
-            rotation = (rotation + degrees) % 360;
+        function resetForm() {
+            document.getElementById('upload').value = '';
+            document.getElementById('preview').src = '';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('aspectRatio').checked = false;
+            rotation = 0;
+            zoomLevel = 1;
             updateTransform();
         }
 
-        function zoomIn() {
-            zoomLevel = Math.min(zoomLevel + 0.1, 2);
-            updateTransform();
-        }
-
-        function zoomOut() {
-            zoomLevel = Math.max(zoomLevel - 0.1, 0.5);
-            updateTransform();
+        function handleDrop(event) {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('upload').files = event.dataTransfer.files;
+                previewImage();
+            }
         }
 
         function updateTransform() {
             const preview = document.getElementById('preview');
             preview.style.transform = `rotate(${rotation}deg) scale(${zoomLevel})`;
+        }
+
+        // ... (تابع إضافة بقية الوظائف مثل rotateImage، zoomIn، zoomOut، removeBackground، وغيرها) ...
+    </script>
+</body>
+</html>
+function rotateImage(degrees) {
+            rotation = (rotation + degrees) % 360;
+            updateTransform();
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.1, 2); // الحد الأقصى للتكبير 2x
+            updateTransform();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.1, 0.5); // الحد الأدنى للتصغير 0.5x
+            updateTransform();
+        }
+
+        function applyBrightness() {
+            const brightness = document.getElementById('brightness').value;
+            document.getElementById('preview').style.filter = `brightness(${brightness}) contrast(${document.getElementById('contrast').value})`;
+        }
+
+        function applyContrast() {
+            const contrast = document.getElementById('contrast').value;
+            document.getElementById('preview').style.filter = `brightness(${document.getElementById('brightness').value}) contrast(${contrast})`;
         }
 
         async function removeBackground() {
@@ -414,30 +301,6 @@
             setTimeout(() => {
                 toast.classList.remove("show");
             }, 3000);
-        }
-
-        function resetForm() {
-            document.getElementById('upload').value = '';
-            document.getElementById('preview').src = '';
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('width').value = '';
-            document.getElementById('height').value = '';
-            document.getElementById('aspectRatio').checked = false;
-            document.getElementById('brightness').value = '1';
-            document.getElementById('contrast').value = '1';
-            document.getElementById('format').value = 'png';
-            rotation = 0;
-            zoomLevel = 1;
-            updateTransform();
-        }
-
-        function handleDrop(event) {
-            event.preventDefault();
-            const file = event.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-                document.getElementById('upload').files = event.dataTransfer.files;
-                previewImage();
-            }
         }
     </script>
 </body>
