@@ -172,7 +172,7 @@
 
     <div class="container">
         <h2>تعديل وحفظ مقاسات متعددة للصورة</h2>
-        <p class="description">قم برفع صورتك ثم حدد الأبعاد والإعدادات الأخرى لحفظها بأحجام متعددة.</p>
+        <p class="description">قم برفع صورتك ثم حدد الأبعاد والصيغة وخيارات إزالة الخلفية وحفظها بأحجام متعددة.</p>
 
         <div id="drop-area" onclick="document.getElementById('upload').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <p>اسحب الصورة هنا أو انقر للرفع</p>
@@ -188,7 +188,16 @@
             <button class="control-button" onclick="rotateImage(90)">تدوير +90°</button>
             <button class="control-button" onclick="zoomIn()">تكبير</button>
             <button class="control-button" onclick="zoomOut()">تصغير</button>
+            <button class="control-button" onclick="removeBackground()">إزالة الخلفية</button>
         </div>
+
+        <label>الوحدة: 
+            <select id="unit" onchange="updateDimensions()">
+                <option value="px">Pixels</option>
+                <option value="cm">Centimeters</option>
+                <option value="in">Inches</option>
+            </select>
+        </label>
 
         <label>العرض: <input type="number" id="width" placeholder="العرض" oninput="updatePreview()" /></label>
         <label>الطول: <input type="number" id="height" placeholder="الطول" oninput="updatePreview()" /></label>
@@ -203,6 +212,14 @@
             <label>تباين:</label>
             <input type="range" id="contrast" min="0" max="2" step="0.1" value="1" class="slider" oninput="applyContrast()" />
         </div>
+
+        <label>صيغة الملف:
+            <select id="format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+            </select>
+        </label>
 
         <button onclick="resizeAndSaveAllSizes()">حفظ الصورة بجميع المقاسات المختارة</button>
 
@@ -255,7 +272,7 @@
         }
 
         function zoomIn() {
-            zoomLevel = Math.min(zoomLevel +0.1, 2); // الحد الأقصى للتكبير 2x لضمان بقاء الصورة داخل الإطار
+            zoomLevel = Math.min(zoomLevel + 0.1, 2); // الحد الأقصى للتكبير 2x لضمان بقاء الصورة داخل الإطار
             updateTransform();
         }
 
@@ -281,6 +298,40 @@
             preview.style.filter = `brightness(${document.getElementById('brightness').value}) contrast(${contrast})`;
         }
 
+        async function removeBackground() {
+            const fileInput = document.getElementById('upload').files[0];
+            if (!fileInput) {
+                showToast("يرجى تحميل صورة أولاً.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("image_file", fileInput);
+            formData.append("size", "auto");
+
+            try {
+                const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+                    method: "POST",
+                    headers: {
+                        "X-Api-Key": "RJkdbAoRFuSPsE1wxP4mNnyH" // مفتاح API الخاص بك
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById("preview").src = url;
+                    showToast("تمت إزالة الخلفية بنجاح!");
+                } else {
+                    showToast("فشل في إزالة الخلفية. تأكد من صحة مفتاح API وحاول مجددًا.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showToast("حدث خطأ أثناء إزالة الخلفية.");
+            }
+        }
+
         function resizeAndSaveAllSizes() {
             const sizes = [
                 { width: 100, height: 100 },
@@ -290,7 +341,7 @@
             ];
 
             const fileInput = document.getElementById('upload');
-            const format = document.getElementById('format') ? document.getElementById('format').value : 'png';
+            const format = document.getElementById('format').value || 'png';
             const canvas = document.createElement("canvas");
             const progressBar = document.getElementById('progress-bar');
             const progressBarFill = document.getElementById('progress-bar-fill');
